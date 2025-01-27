@@ -71,4 +71,111 @@
         max-width: 100%;
         margin: 0 auto 10px;
       }
-      
+      .todo, .upcoming {
+        background: white;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+      }
+      .todo ul, .upcoming ul {
+        list-style: none;
+        padding: 0;
+      }
+      .todo li, .upcoming li {
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <img src="LOGO_URL" alt="R.A.M Restoration and Handyman Logo">
+        <h1>R.A.M Restoration CRM</h1>
+      </div>
+      <nav>
+        <a href="#dashboard" onclick="showTab('dashboard')">Dashboard</a>
+        <a href="#estimates" onclick="showTab('estimates')">Estimates</a>
+        <a href="#invoices" onclick="showTab('invoices')">Invoices</a>
+        <a href="#customers" onclick="showTab('customers')">Customers</a>
+      </nav>
+    </header>
+    <div class="container">
+      <!-- Dashboard Section -->
+      <div id="dashboard" class="tab">
+        <h2>Dashboard</h2>
+        <div class="stats">
+          <div class="card">
+            <canvas id="chart-estimates"></canvas>
+            <h2>Total Estimates</h2>
+            <p id="total-estimates">$0</p>
+          </div>
+          <div class="card">
+            <canvas id="chart-invoices"></canvas>
+            <h2>Total Invoiced</h2>
+            <p id="total-invoiced">$0</p>
+          </div>
+          <div class="card">
+            <canvas id="chart-profit"></canvas>
+            <h2>Profit YTD</h2>
+            <p id="profit-ytd">$0</p>
+          </div>
+          <div class="card">
+            <canvas id="chart-types"></canvas>
+            <h2>Types of Work</h2>
+          </div>
+        </div>
+        <div class="todo">
+          <h2>To-Do List</h2>
+          <ul id="todo-list"></ul>
+          <button class="button" onclick="addTodo()">+ Add Task</button>
+        </div>
+        <div class="upcoming">
+          <h2>Upcoming Projects</h2>
+          <ul id="upcoming-projects"></ul>
+        </div>
+      </div>
+      <!-- Other Sections -->
+      <div id="estimates" class="tab" style="display: none;">
+        <h2>Estimates</h2>
+        <button class="button" onclick="createNewEstimate()">Create New Estimate</button>
+        <p>Estimates details go here...</p>
+      </div>
+      <div id="invoices" class="tab" style="display: none;">
+        <h2>Invoices</h2>
+        <button class="button" onclick="createNewInvoice()">Create New Invoice</button>
+        <p>Invoices details go here...</p>
+      </div>
+      <div id="customers" class="tab" style="display: none;">
+        <h2>Customers</h2>
+        <button class="button" onclick="addNewCustomer()">Add New Customer</button>
+        <p>Customer details go here...</p>
+      </div>
+    </div>
+    <script>
+      function showTab(tabId) {
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => tab.style.display = 'none');
+        document.getElementById(tabId).style.display = 'block');
+      }
+      function createNewEstimate() { alert('Navigate to Create New Estimate!'); }
+      function createNewInvoice() { alert('Navigate to Create New Invoice!'); }
+      function addNewCustomer() { alert('Navigate to Add New Customer!'); }
+      function addTodo() {
+        const task = prompt('Enter a new task:');
+        if (task) {
+          const list = document.getElementById('todo-list');
+          const item = document.createElement('li');
+          item.textContent = task;
+          const removeBtn = document.createElement('button');
+          removeBtn.textContent = 'Remove';
+          removeBtn.onclick = () => list.removeChild(item);
+          item.appendChild(removeBtn);
+          list.appendChild(item);
+        }
+      }
+    </script>
+  </body>
+</html>
