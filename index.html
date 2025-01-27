@@ -47,45 +47,56 @@
         border-radius: 5px;
         cursor: pointer;
         font-size: 16px;
+        margin-right: 10px;
       }
       .button:hover {
         background-color: #228b22;
       }
-      .stats {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
+      .hidden {
+        display: none;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .line-items {
         margin-top: 20px;
       }
-      .stats .card {
-        background: white;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-        padding: 20px;
-        flex: 1;
-        min-width: 250px;
-        text-align: center;
-        position: relative;
+      .line-items table {
+        width: 100%;
+        border-collapse: collapse;
       }
-      .card canvas {
-        max-width: 100%;
-        margin: 0 auto 10px;
+      .line-items table th, .line-items table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
       }
-      .todo, .upcoming {
-        background: white;
-        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-        padding: 20px;
+      .line-items table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+      .totals {
+        margin-top: 20px;
+        text-align: right;
+      }
+      .totals div {
+        margin-bottom: 5px;
+      }
+      .file-upload {
         margin-top: 20px;
       }
-      .todo ul, .upcoming ul {
-        list-style: none;
-        padding: 0;
-      }
-      .todo li, .upcoming li {
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: space-between;
+      .file-upload input {
+        margin-top: 10px;
       }
     </style>
   </head>
@@ -106,76 +117,133 @@
       <!-- Dashboard Section -->
       <div id="dashboard" class="tab">
         <h2>Dashboard</h2>
-        <div class="stats">
-          <div class="card">
-            <canvas id="chart-estimates"></canvas>
-            <h2>Total Estimates</h2>
-            <p id="total-estimates">$0</p>
-          </div>
-          <div class="card">
-            <canvas id="chart-invoices"></canvas>
-            <h2>Total Invoiced</h2>
-            <p id="total-invoiced">$0</p>
-          </div>
-          <div class="card">
-            <canvas id="chart-profit"></canvas>
-            <h2>Profit YTD</h2>
-            <p id="profit-ytd">$0</p>
-          </div>
-          <div class="card">
-            <canvas id="chart-types"></canvas>
-            <h2>Types of Work</h2>
-          </div>
-        </div>
-        <div class="todo">
-          <h2>To-Do List</h2>
-          <ul id="todo-list"></ul>
-          <button class="button" onclick="addTodo()">+ Add Task</button>
-        </div>
-        <div class="upcoming">
-          <h2>Upcoming Projects</h2>
-          <ul id="upcoming-projects"></ul>
-        </div>
+        <p>Welcome to the Dashboard!</p>
       </div>
-      <!-- Other Sections -->
-      <div id="estimates" class="tab" style="display: none;">
-        <h2>Estimates</h2>
-        <button class="button" onclick="createNewEstimate()">Create New Estimate</button>
-        <p>Estimates details go here...</p>
+
+      <!-- Estimates Section -->
+      <div id="estimates" class="tab hidden">
+        <h2>Create New Estimate</h2>
+        <form id="estimate-form">
+          <!-- Customer Details -->
+          <div class="form-group">
+            <label for="customer-first-name">First Name</label>
+            <input type="text" id="customer-first-name" required>
+          </div>
+          <div class="form-group">
+            <label for="customer-last-name">Last Name</label>
+            <input type="text" id="customer-last-name" required>
+          </div>
+          <div class="form-group">
+            <label for="property-address">Property Address</label>
+            <input type="text" id="property-address" required>
+          </div>
+
+          <!-- Job Details -->
+          <div class="form-group">
+            <label for="job-description">Job Description</label>
+            <textarea id="job-description" rows="4" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="estimate-date">Estimate Date</label>
+            <input type="date" id="estimate-date" required>
+          </div>
+          <div class="form-group">
+            <label for="po-number">Estimate / P.O. Number</label>
+            <input type="text" id="po-number" required>
+          </div>
+          <div class="form-group">
+            <label for="type-of-work">Type of Work</label>
+            <select id="type-of-work">
+              <option value="Plumbing">Plumbing</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Painting">Painting</option>
+              <option value="HVAC">HVAC</option>
+              <option value="Roofing">Roofing</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- Line Items -->
+          <div class="line-items">
+            <h3>Line Items</h3>
+            <table id="line-items-table">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Description</th>
+                  <th>Quantity</th>
+                  <th>Unit Price ($)</th>
+                  <th>Subtotal ($)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><input type="text" class="service"></td>
+                  <td><input type="text" class="description"></td>
+                  <td><input type="number" class="quantity" value="1" min="1"></td>
+                  <td><input type="number" class="unit-price" value="0" min="0"></td>
+                  <td class="subtotal">0</td>
+                  <td><button type="button" onclick="removeLineItem(this)">Remove</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button type="button" onclick="addLineItem()">+ Add Line Item</button>
+          </div>
+
+          <!-- Totals -->
+          <div class="totals">
+            <div>Subtotal: <span id="subtotal">$0.00</span></div>
+            <div>Discount: <input type="number" id="discount" value="0" min="0">%</div>
+            <div>Total: <span id="total">$0.00</span></div>
+          </div>
+
+          <!-- File Upload -->
+          <div class="file-upload">
+            <label for="attachments">Attachments (photos or PDFs):</label>
+            <input type="file" id="attachments" multiple>
+          </div>
+
+          <!-- Buttons -->
+          <div style="margin-top: 20px;">
+            <button type="submit" class="button">Save Estimate</button>
+            <button type="button" class="button" onclick="sendEstimate()">Send Estimate</button>
+            <button type="button" class="button" onclick="generateSignatureLink()">Generate Signature Link</button>
+          </div>
+        </form>
       </div>
-      <div id="invoices" class="tab" style="display: none;">
+
+      <!-- Invoices Section -->
+      <div id="invoices" class="tab hidden">
         <h2>Invoices</h2>
-        <button class="button" onclick="createNewInvoice()">Create New Invoice</button>
-        <p>Invoices details go here...</p>
+        <p>Invoices section coming soon!</p>
       </div>
-      <div id="customers" class="tab" style="display: none;">
+
+      <!-- Customers Section -->
+      <div id="customers" class="tab hidden">
         <h2>Customers</h2>
-        <button class="button" onclick="addNewCustomer()">Add New Customer</button>
-        <p>Customer details go here...</p>
+        <p>Customers section coming soon!</p>
       </div>
     </div>
+
     <script>
       function showTab(tabId) {
         const tabs = document.querySelectorAll('.tab');
-        tabs.forEach(tab => tab.style.display = 'none');
-        document.getElementById(tabId).style.display = 'block');
+        tabs.forEach(tab => tab.classList.add('hidden'));
+        document.getElementById(tabId).classList.remove('hidden');
       }
-      function createNewEstimate() { alert('Navigate to Create New Estimate!'); }
-      function createNewInvoice() { alert('Navigate to Create New Invoice!'); }
-      function addNewCustomer() { alert('Navigate to Add New Customer!'); }
-      function addTodo() {
-        const task = prompt('Enter a new task:');
-        if (task) {
-          const list = document.getElementById('todo-list');
-          const item = document.createElement('li');
-          item.textContent = task;
-          const removeBtn = document.createElement('button');
-          removeBtn.textContent = 'Remove';
-          removeBtn.onclick = () => list.removeChild(item);
-          item.appendChild(removeBtn);
-          list.appendChild(item);
-        }
+
+      function addLineItem() {
+        const table = document.getElementById('line-items-table').getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow();
+        newRow.innerHTML = `
+          <td><input type="text" class="service"></td>
+          <td><input type="text" class="description"></td>
+          <td><input type="number" class="quantity" value="1" min="1"></td>
+          <td><input type="number" class="unit-price" value="0" min="0"></td>
+          <td class="subtotal">0</td>
+          <td><button type="button" onclick="removeLineItem(this)">Remove</button></td>
+        `;
       }
-    </script>
-  </body>
-</html>
+
+      function
