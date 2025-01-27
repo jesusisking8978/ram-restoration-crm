@@ -1,62 +1,129 @@
-Sure! I can combine both the **master sheet** script and the **finalize estimate** script into one cohesive script. Here’s the full script that handles both your **master sheet** overview and the **estimates sheet finalization** process:
+import React, { useState, useEffect } from "react";
+import { Pie } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
-### Combined Google Apps Script:
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
-```javascript
-// Function to update the Master Sheet with project, client, and financial data
-function updateMasterSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var masterSheet = ss.getSheetByName("Master Sheet"); // Name of the master sheet
-  var crmSheet = ss.getSheetByName("CRM");
-  var estimatesSheet = ss.getSheetByName("Estimates");
-  var invoicesSheet = ss.getSheetByName("Invoices");
+const MasterDashboard = () => {
+  const [crmData, setCrmData] = useState([]);
+  const [estimatesData, setEstimatesData] = useState([]);
+  const [invoicesData, setInvoicesData] = useState([]);
+  const [dashboardData, setDashboardData] = useState({
+    totalCustomers: 0,
+    totalEstimates: 0,
+    totalInvoices: 0,
+    estimateStatuses: {},
+  });
 
-  // Get all the rows from the CRM, estimates, and invoices sheets
-  var crmData = crmSheet.getDataRange().getValues();
-  var estimatesData = estimatesSheet.getDataRange().getValues();
-  var invoicesData = invoicesSheet.getDataRange().getValues();
+  useEffect(() => {
+    // Simulate fetching data from a database or API
+    const fetchData = async () => {
+      const crm = [
+        { id: 1, name: "Customer A" },
+        { id: 2, name: "Customer B" },
+      ];
+      const estimates = [
+        { id: 1, projectName: "Project 1", customerName: "Customer A", status: "Pending" },
+        { id: 2, projectName: "Project 2", customerName: "Customer B", status: "Approved" },
+        { id: 3, projectName: "Project 3", customerName: "Customer A", status: "Declined" },
+      ];
+      const invoices = [
+        { id: 1, amount: 500, status: "Paid" },
+        { id: 2, amount: 750, status: "Unpaid" },
+      ];
 
-  // Update the Master Sheet based on CRM, estimates, and invoices data
-  for (var i = 1; i < crmData.length; i++) {
-    var customerName = crmData[i][0];
-    var projectName = crmData[i][1];
-    var estimateAmount = crmData[i][2];
+      setCrmData(crm);
+      setEstimatesData(estimates);
+      setInvoicesData(invoices);
 
-    // You can customize what data you want in the Master Sheet
-    masterSheet.appendRow([customerName, projectName, estimateAmount]);
-  }
+      // Calculate key metrics
+      const statuses = estimates.reduce((acc, estimate) => {
+        acc[estimate.status] = (acc[estimate.status] || 0) + 1;
+        return acc;
+      }, {});
 
-  // Here you can add additional logic to summarize or track financial data as needed
-}
+      setDashboardData({
+        totalCustomers: crm.length,
+        totalEstimates: estimates.length,
+        totalInvoices: invoices.length,
+        estimateStatuses: statuses,
+      });
+    };
 
-// Function to finalize the estimate and update CRM and invoices
-function finalizeEstimate() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var estimateSheet = ss.getSheetByName("Estimates");
-  var crmSheet = ss.getSheetByName("CRM");
-  var invoiceSheet = ss.getSheetByName("Invoices");
+    fetchData();
+  }, []);
 
-  // Get all the rows from the estimates sheet
-  var estimates = estimateSheet.getDataRange().getValues();
+  // Pie chart data
+  const pieData = {
+    labels: Object.keys(dashboardData.estimateStatuses),
+    datasets: [
+      {
+        label: "Estimate Statuses",
+        data: Object.values(dashboardData.estimateStatuses),
+        backgroundColor: ["#4caf50", "#ff9800", "#f44336", "#2196f3"],
+      },
+    ],
+  };
 
-  // Loop through each estimate
-  for (var i = 1; i < estimates.length; i++) {
-    var estimateStatus = estimates[i][4]; // Assuming 'Status' is in column E (index 4)
-    
-    if (estimateStatus === "Approved") {
-      // Get the customer info and project details from the approved estimate
-      var customerName = estimates[i][0]; // Assuming 'Customer Name' is in column A (index 0)
-      var projectName = estimates[i][1]; // Assuming 'Project Name' is in column B (index 1)
-      var estimateAmount = estimates[i][3]; // Assuming 'Amount' is in column D (index 3)
-      
-      // Check if the customer already exists in the CRM sheet
-      var crmData = crmSheet.getDataRange().getValues();
-      var customerExists = false;
-      
-      for (var j = 1; j < crmData.length; j++) {
-        if (crmData[j][0] === customerName) { // Assuming 'Customer Name' is in column A (index 0)
-          customerExists = true;
-          break;
-        }
-      }
-      
+  return (
+    <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Key Metrics */}
+      <div className="p-4 border rounded shadow">
+        <h2 className="text-lg font-semibold">Total Customers</h2>
+        <p className="text-2xl">{dashboardData.totalCustomers}</p>
+      </div>
+
+      <div className="p-4 border rounded shadow">
+        <h2 className="text-lg font-semibold">Total Estimates</h2>
+        <p className="text-2xl">{dashboardData.totalEstimates}</p>
+      </div>
+
+      <div className="p-4 border rounded shadow">
+        <h2 className="text-lg font-semibold">Total Invoices</h2>
+        <p className="text-2xl">{dashboardData.totalInvoices}</p>
+      </div>
+
+      {/* Pie Chart */}
+      <div className="p-4 border rounded shadow col-span-2">
+        <h2 className="text-lg font-semibold">Estimate Status Breakdown</h2>
+        {pieData.labels.length > 0 ? (
+          <Pie data={pieData} />
+        ) : (
+          <p>No data available for pie chart.</p>
+        )}
+      </div>
+
+      {/* Estimates Workflow */}
+      <div className="p-4 border rounded shadow col-span-3">
+        <h2 className="text-lg font-semibold">Estimates Workflow</h2>
+        {estimatesData.map((estimate) => (
+          <div
+            key={estimate.id}
+            className="p-2 border-b flex justify-between items-center"
+          >
+            <span>{estimate.projectName} - {estimate.customerName}</span>
+            <span>Status: {estimate.status}</span>
+            {estimate.status === "Pending" && (
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded"
+                onClick={() => {
+                  const updatedEstimate = { ...estimate, status: "Approved" };
+                  setEstimatesData((prev) =>
+                    prev.map((e) =>
+                      e.id === estimate.id ? updatedEstimate : e
+                    )
+                  );
+                }}
+              >
+                Approve
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default MasterDashboard;
