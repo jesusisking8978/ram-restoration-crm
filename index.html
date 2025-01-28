@@ -1,197 +1,163 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRM Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f9;
-    }
-    nav {
-      background-color: #007bff;
-      padding: 15px;
-      display: flex;
-      justify-content: space-around;
-    }
-    nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    nav a:hover {
-      text-decoration: underline;
-    }
-    .content {
-      padding: 20px;
-    }
-    .hidden {
-      display: none;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-    button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    table th, table td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-    }
-    table th {
-      background-color: #f4f4f9;
-    }
-  </style>
-</head>
-<body>
-  <!-- Navigation -->
-  <nav>
-    <a href="#" onclick="showPage('dashboard')">Dashboard</a>
-    <a href="#" onclick="showPage('estimates')">Estimates</a>
-    <a href="#" onclick="showPage('jobs')">Jobs</a>
-    <a href="#" onclick="showPage('invoices')">Invoices</a>
-    <a href="#" onclick="showPage('customers')">Customers</a>
-  </nav>
+import React, { useState, useEffect } from "react";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { Pie } from "react-chartjs-2";
 
-  <!-- Dashboard -->
-  <div id="dashboard" class="content">
-    <h1>Dashboard</h1>
-    <div class="card">
-      <h2>Total Customers</h2>
-      <p id="total-customers">0</p>
+ChartJS.register(ArcElement, Tooltip, Legend);
+
+const App = () => {
+  const [page, setPage] = useState("dashboard");
+  const [estimatesData, setEstimatesData] = useState([
+    { id: 1, projectName: "Project 1", customerName: "Customer A", status: "Pending", amount: 5000 },
+    { id: 2, projectName: "Project 2", customerName: "Customer B", status: "Approved", amount: 7000 },
+  ]);
+  const [newEstimate, setNewEstimate] = useState({
+    projectName: "",
+    customerName: "",
+    poNumber: "",
+    lineItems: "",
+    amount: "",
+  });
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handleNewEstimateChange = (e) => {
+    setNewEstimate({ ...newEstimate, [e.target.name]: e.target.value });
+  };
+
+  const saveEstimate = (e) => {
+    e.preventDefault();
+    setEstimatesData((prev) => [
+      ...prev,
+      { ...newEstimate, id: prev.length + 1, status: "Pending", amount: parseFloat(newEstimate.amount) },
+    ]);
+    setPage("estimates");
+  };
+
+  const renderPieChart = () => {
+    const statuses = estimatesData.reduce((acc, cur) => {
+      acc[cur.status] = (acc[cur.status] || 0) + cur.amount;
+      return acc;
+    }, {});
+
+    return (
+      <Pie
+        data={{
+          labels: Object.keys(statuses),
+          datasets: [
+            {
+              data: Object.values(statuses),
+              backgroundColor: ["#4caf50", "#ff9800", "#f44336", "#2196f3"],
+            },
+          ],
+        }}
+      />
+    );
+  };
+
+  return (
+    <div>
+      {/* Navigation */}
+      <nav style={{ backgroundColor: "#007bff", padding: "15px", display: "flex", justifyContent: "space-around" }}>
+        {["dashboard", "estimates", "jobs", "invoices", "customers"].map((item) => (
+          <a
+            key={item}
+            href="#"
+            onClick={() => handlePageChange(item)}
+            style={{ color: "white", textDecoration: "none", fontWeight: "bold" }}
+          >
+            {item.charAt(0).toUpperCase() + item.slice(1)}
+          </a>
+        ))}
+      </nav>
+
+      {/* Search Bar */}
+      <div style={{ padding: "20px" }}>
+        <input
+          type="text"
+          placeholder="Search..."
+          style={{ width: "100%", padding: "8px", marginBottom: "20px" }}
+        />
+      </div>
+
+      {/* Page Content */}
+      {page === "dashboard" && (
+        <div style={{ padding: "20px" }}>
+          <h1>Dashboard</h1>
+          <div>Total Customers: {estimatesData.length}</div>
+          <div>Total Estimates: {estimatesData.length}</div>
+          <div>Total Invoices: 0</div>
+        </div>
+      )}
+
+      {page === "estimates" && (
+        <div style={{ padding: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <h1>Estimates</h1>
+            <button onClick={() => handlePageChange("new-estimate")}>Create New Estimate</button>
+          </div>
+          <div>
+            <h2>Estimate Amount Breakdown</h2>
+            {renderPieChart()}
+          </div>
+          <div>
+            <h2>Estimate List</h2>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Project Name</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Customer</th>
+                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {estimatesData.map((estimate) => (
+                  <tr key={estimate.id}>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{estimate.projectName}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{estimate.customerName}</td>
+                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{estimate.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {page === "new-estimate" && (
+        <div style={{ padding: "20px" }}>
+          <h1>Create New Estimate</h1>
+          <form onSubmit={saveEstimate}>
+            <div>
+              <label>Project Name:</label>
+              <input type="text" name="projectName" onChange={handleNewEstimateChange} required />
+            </div>
+            <div>
+              <label>Customer Name:</label>
+              <input type="text" name="customerName" onChange={handleNewEstimateChange} required />
+            </div>
+            <div>
+              <label>PO Number:</label>
+              <input type="text" name="poNumber" onChange={handleNewEstimateChange} />
+            </div>
+            <div>
+              <label>Line Items:</label>
+              <textarea name="lineItems" rows="4" onChange={handleNewEstimateChange}></textarea>
+            </div>
+            <div>
+              <label>Total Amount:</label>
+              <input type="number" name="amount" onChange={handleNewEstimateChange} required />
+            </div>
+            <button type="submit">Save</button>
+            <button type="button" onClick={() => handlePageChange("estimates")}>
+              Cancel
+            </button>
+          </form>
+        </div>
+      )}
     </div>
-    <div class="card">
-      <h2>Total Estimates</h2>
-      <p id="total-estimates">0</p>
-    </div>
-    <div class="card">
-      <h2>Total Invoices</h2>
-      <p id="total-invoices">0</p>
-    </div>
-  </div>
+  );
+};
 
-  <!-- Estimates -->
-  <div id="estimates" class="content hidden">
-    <div class="header">
-      <h1>Estimates</h1>
-      <button onclick="showPage('new-estimate')">Create New Estimate</button>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Project Name</th>
-          <th>Customer</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="estimates-table">
-        <!-- Populated dynamically -->
-      </tbody>
-    </table>
-  </div>
-
-  <!-- New Estimate -->
-  <div id="new-estimate" class="content hidden">
-    <h1>Create New Estimate</h1>
-    <form>
-      <label>
-        Project Name:
-        <input type="text" name="projectName" required>
-      </label>
-      <br><br>
-      <label>
-        Customer Name:
-        <input type="text" name="customerName" required>
-      </label>
-      <br><br>
-      <label>
-        Estimated Amount:
-        <input type="number" name="amount" required>
-      </label>
-      <br><br>
-      <button type="submit">Save Estimate</button>
-    </form>
-    <button onclick="showPage('estimates')">Cancel</button>
-  </div>
-
-  <!-- Jobs -->
-  <div id="jobs" class="content hidden">
-    <h1>Jobs</h1>
-    <p>Jobs management will go here.</p>
-  </div>
-
-  <!-- Invoices -->
-  <div id="invoices" class="content hidden">
-    <h1>Invoices</h1>
-    <p>Invoices management will go here.</p>
-  </div>
-
-  <!-- Customers -->
-  <div id="customers" class="content hidden">
-    <h1>Customers</h1>
-    <p>Customer data will go here.</p>
-  </div>
-
-  <script>
-    const crmData = [
-      { id: 1, name: "Customer A" },
-      { id: 2, name: "Customer B" },
-    ];
-    const estimatesData = [
-      { id: 1, projectName: "Project 1", customerName: "Customer A", status: "Pending" },
-      { id: 2, projectName: "Project 2", customerName: "Customer B", status: "Approved" },
-    ];
-    const invoicesData = [
-      { id: 1, amount: 500, status: "Paid" },
-      { id: 2, amount: 750, status: "Unpaid" },
-    ];
-
-    document.getElementById("total-customers").textContent = crmData.length;
-    document.getElementById("total-estimates").textContent = estimatesData.length;
-    document.getElementById("total-invoices").textContent = invoicesData.length;
-
-    const estimatesTable = document.getElementById("estimates-table");
-    estimatesData.forEach((estimate) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${estimate.projectName}</td>
-        <td>${estimate.customerName}</td>
-        <td>${estimate.status}</td>
-      `;
-      estimatesTable.appendChild(row);
-    });
-
-    function showPage(pageId) {
-      document.querySelectorAll(".content").forEach((el) => el.classList.add("hidden"));
-      document.getElementById(pageId).classList.remove("hidden");
-    }
-  </script>
-</body>
-</html>
+export default App;
