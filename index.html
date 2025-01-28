@@ -1,49 +1,204 @@
-import React, { useState, useEffect } from "react";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Pie } from "react-chartjs-2";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+    }
+    nav {
+      background-color: #007bff;
+      padding: 15px;
+      display: flex;
+      justify-content: space-around;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    .content {
+      padding: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    table th {
+      background-color: #f4f4f9;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <a href="#" onclick="showPage('dashboard')">Dashboard</a>
+    <a href="#" onclick="showPage('estimates')">Estimates</a>
+    <a href="#" onclick="showPage('jobs')">Jobs</a>
+    <a href="#" onclick="showPage('invoices')">Invoices</a>
+    <a href="#" onclick="showPage('customers')">Customers</a>
+  </nav>
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+  <!-- Search Bar -->
+  <div id="search-bar" class="content">
+    <input type="text" id="search" placeholder="Search..." oninput="handleSearch()">
+  </div>
 
-const App = () => {
-  const [page, setPage] = useState("dashboard");
-  const [estimatesData, setEstimatesData] = useState([
-    { id: 1, projectName: "Project 1", customerName: "Customer A", status: "Pending", amount: 5000 },
-    { id: 2, projectName: "Project 2", customerName: "Customer B", status: "Approved", amount: 7000 },
-  ]);
-  const [newEstimate, setNewEstimate] = useState({
-    projectName: "",
-    customerName: "",
-    poNumber: "",
-    lineItems: "",
-    amount: "",
-  });
+  <!-- Dashboard -->
+  <div id="dashboard" class="content">
+    <h1>Dashboard</h1>
+    <div class="card">
+      <h2>Total Customers</h2>
+      <p id="total-customers">0</p>
+    </div>
+    <div class="card">
+      <h2>Total Estimates</h2>
+      <p id="total-estimates">0</p>
+    </div>
+    <div class="card">
+      <h2>Total Invoices</h2>
+      <p id="total-invoices">0</p>
+    </div>
+  </div>
 
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-  };
+  <!-- Estimates -->
+  <div id="estimates" class="content hidden">
+    <div class="header">
+      <h1>Estimates</h1>
+      <button onclick="showPage('new-estimate')">Create New Estimate</button>
+    </div>
+    <div class="card">
+      <h2>Estimate Amount Breakdown</h2>
+      <canvas id="estimate-pie-chart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Recent Updates</h2>
+      <ul id="updates-list"></ul>
+    </div>
+    <div class="card">
+      <h2>Estimate List</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Project Name</th>
+            <th>Customer</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="estimate-table-body"></tbody>
+      </table>
+    </div>
+  </div>
 
-  const handleNewEstimateChange = (e) => {
-    setNewEstimate({ ...newEstimate, [e.target.name]: e.target.value });
-  };
+  <!-- New Estimate -->
+  <div id="new-estimate" class="content hidden">
+    <h1>Create New Estimate</h1>
+    <form onsubmit="saveEstimate(event)">
+      <label>Project Name:
+        <input type="text" id="project-name" required>
+      </label><br>
+      <label>Customer Name:
+        <input type="text" id="customer-name" required>
+      </label><br>
+      <label>PO Number:
+        <input type="text" id="po-number">
+      </label><br>
+      <label>Line Items:
+        <textarea id="line-items" rows="4"></textarea>
+      </label><br>
+      <label>Total Amount:
+        <input type="number" id="total-amount" required>
+      </label><br>
+      <button type="submit">Save</button>
+      <button type="button" onclick="showPage('estimates')">Cancel</button>
+    </form>
+  </div>
 
-  const saveEstimate = (e) => {
-    e.preventDefault();
-    setEstimatesData((prev) => [
-      ...prev,
-      { ...newEstimate, id: prev.length + 1, status: "Pending", amount: parseFloat(newEstimate.amount) },
-    ]);
-    setPage("estimates");
-  };
+  <!-- Script -->
+  <script>
+    const estimatesData = [
+      { id: 1, projectName: "Project 1", customerName: "Customer A", status: "Pending", amount: 5000 },
+      { id: 2, projectName: "Project 2", customerName: "Customer B", status: "Approved", amount: 7000 },
+    ];
 
-  const renderPieChart = () => {
-    const statuses = estimatesData.reduce((acc, cur) => {
-      acc[cur.status] = (acc[cur.status] || 0) + cur.amount;
-      return acc;
-    }, {});
+    function showPage(pageId) {
+      document.querySelectorAll(".content").forEach((el) => el.classList.add("hidden"));
+      document.getElementById(pageId).classList.remove("hidden");
+    }
 
-    return (
-      <Pie
-        data={{
+    function renderEstimates() {
+      const tbody = document.getElementById("estimate-table-body");
+      tbody.innerHTML = estimatesData.map(
+        (estimate) =>
+          `<tr>
+            <td>${estimate.projectName}</td>
+            <td>${estimate.customerName}</td>
+            <td>${estimate.status}</td>
+          </tr>`
+      ).join("");
+
+      const statuses = estimatesData.reduce((acc, cur) => {
+        acc[cur.status] = (acc[cur.status] || 0) + cur.amount;
+        return acc;
+      }, {});
+
+      const ctx = document.getElementById("estimate-pie-chart").getContext("2d");
+      new Chart(ctx, {
+        type: "pie",
+        data: {
           labels: Object.keys(statuses),
           datasets: [
             {
@@ -51,113 +206,28 @@ const App = () => {
               backgroundColor: ["#4caf50", "#ff9800", "#f44336", "#2196f3"],
             },
           ],
-        }}
-      />
-    );
-  };
+        },
+      });
+    }
 
-  return (
-    <div>
-      {/* Navigation */}
-      <nav style={{ backgroundColor: "#007bff", padding: "15px", display: "flex", justifyContent: "space-around" }}>
-        {["dashboard", "estimates", "jobs", "invoices", "customers"].map((item) => (
-          <a
-            key={item}
-            href="#"
-            onClick={() => handlePageChange(item)}
-            style={{ color: "white", textDecoration: "none", fontWeight: "bold" }}
-          >
-            {item.charAt(0).toUpperCase() + item.slice(1)}
-          </a>
-        ))}
-      </nav>
+    function saveEstimate(event) {
+      event.preventDefault();
+      const newEstimate = {
+        projectName: document.getElementById("project-name").value,
+        customerName: document.getElementById("customer-name").value,
+        poNumber: document.getElementById("po-number").value,
+        lineItems: document.getElementById("line-items").value,
+        amount: parseFloat(document.getElementById("total-amount").value),
+        status: "Pending",
+      };
+      estimatesData.push(newEstimate);
+      showPage("estimates");
+      renderEstimates();
+    }
 
-      {/* Search Bar */}
-      <div style={{ padding: "20px" }}>
-        <input
-          type="text"
-          placeholder="Search..."
-          style={{ width: "100%", padding: "8px", marginBottom: "20px" }}
-        />
-      </div>
-
-      {/* Page Content */}
-      {page === "dashboard" && (
-        <div style={{ padding: "20px" }}>
-          <h1>Dashboard</h1>
-          <div>Total Customers: {estimatesData.length}</div>
-          <div>Total Estimates: {estimatesData.length}</div>
-          <div>Total Invoices: 0</div>
-        </div>
-      )}
-
-      {page === "estimates" && (
-        <div style={{ padding: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <h1>Estimates</h1>
-            <button onClick={() => handlePageChange("new-estimate")}>Create New Estimate</button>
-          </div>
-          <div>
-            <h2>Estimate Amount Breakdown</h2>
-            {renderPieChart()}
-          </div>
-          <div>
-            <h2>Estimate List</h2>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Project Name</th>
-                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Customer</th>
-                  <th style={{ border: "1px solid #ddd", padding: "10px" }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {estimatesData.map((estimate) => (
-                  <tr key={estimate.id}>
-                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{estimate.projectName}</td>
-                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{estimate.customerName}</td>
-                    <td style={{ border: "1px solid #ddd", padding: "10px" }}>{estimate.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {page === "new-estimate" && (
-        <div style={{ padding: "20px" }}>
-          <h1>Create New Estimate</h1>
-          <form onSubmit={saveEstimate}>
-            <div>
-              <label>Project Name:</label>
-              <input type="text" name="projectName" onChange={handleNewEstimateChange} required />
-            </div>
-            <div>
-              <label>Customer Name:</label>
-              <input type="text" name="customerName" onChange={handleNewEstimateChange} required />
-            </div>
-            <div>
-              <label>PO Number:</label>
-              <input type="text" name="poNumber" onChange={handleNewEstimateChange} />
-            </div>
-            <div>
-              <label>Line Items:</label>
-              <textarea name="lineItems" rows="4" onChange={handleNewEstimateChange}></textarea>
-            </div>
-            <div>
-              <label>Total Amount:</label>
-              <input type="number" name="amount" onChange={handleNewEstimateChange} required />
-            </div>
-            <button type="submit">Save</button>
-            <button type="button" onClick={() => handlePageChange("estimates")}>
-              Cancel
-            </button>
-          </form>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default App;
+    document.addEventListener("DOMContentLoaded", () => {
+      renderEstimates();
+    });
+  </script>
+</body>
+</html>
