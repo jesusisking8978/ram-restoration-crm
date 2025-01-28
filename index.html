@@ -59,6 +59,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
+      margin-bottom: 20px;
     }
     table th, table td {
       border: 1px solid #ddd;
@@ -112,6 +113,10 @@
       <h2>Total Invoices</h2>
       <p id="total-invoices">0</p>
     </div>
+    <div class="card">
+      <h2>Total Jobs</h2>
+      <p id="total-jobs">0</p>
+    </div>
   </div>
 
   <!-- Estimates -->
@@ -156,12 +161,33 @@
       <label>PO Number:
         <input type="text" id="po-number">
       </label><br>
-      <label>Line Items:
-        <textarea id="line-items" rows="4"></textarea>
+      
+      <!-- Line Items Section -->
+      <h2>Line Items</h2>
+      <table id="line-items-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="text" class="line-item-title" required></td>
+            <td><input type="text" class="line-item-description"></td>
+            <td><input type="number" class="line-item-quantity" value="1" min="1" required></td>
+            <td><input type="number" class="line-item-cost" value="0" min="0" required></td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" onclick="addLineItem()">Add Line Item</button>
+      
+      <label>Total Estimated Job Cost:
+        <input type="text" id="total-job-cost" readonly>
       </label><br>
-      <label>Total Amount:
-        <input type="number" id="total-amount" required>
-      </label><br>
+      
       <button type="submit">Save</button>
       <button type="button" onclick="showPage('estimates')">Cancel</button>
     </form>
@@ -169,64 +195,38 @@
 
   <!-- Script -->
   <script>
-    const estimatesData = [
-      { id: 1, projectName: "Project 1", customerName: "Customer A", status: "Pending", amount: 5000 },
-      { id: 2, projectName: "Project 2", customerName: "Customer B", status: "Approved", amount: 7000 },
-    ];
-
     function showPage(pageId) {
-      document.querySelectorAll(".content").forEach((el) => el.classList.add("hidden"));
+      document.querySelectorAll(".content").forEach(el => el.classList.add("hidden"));
       document.getElementById(pageId).classList.remove("hidden");
     }
 
-    function renderEstimates() {
-      const tbody = document.getElementById("estimate-table-body");
-      tbody.innerHTML = estimatesData.map(
-        (estimate) =>
-          `<tr>
-            <td>${estimate.projectName}</td>
-            <td>${estimate.customerName}</td>
-            <td>${estimate.status}</td>
-          </tr>`
-      ).join("");
+    function addLineItem() {
+      const tableBody = document.querySelector("#line-items-table tbody");
+      const newRow = document.createElement("tr");
+      newRow.innerHTML = `
+        <td><input type="text" class="line-item-title" required></td>
+        <td><input type="text" class="line-item-description"></td>
+        <td><input type="number" class="line-item-quantity" value="1" min="1" required></td>
+        <td><input type="number" class="line-item-cost" value="0" min="0" required></td>
+      `;
+      tableBody.appendChild(newRow);
+    }
 
-      const statuses = estimatesData.reduce((acc, cur) => {
-        acc[cur.status] = (acc[cur.status] || 0) + cur.amount;
-        return acc;
-      }, {});
-
-      const ctx = document.getElementById("estimate-pie-chart").getContext("2d");
-      new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels: Object.keys(statuses),
-          datasets: [
-            {
-              data: Object.values(statuses),
-              backgroundColor: ["#4caf50", "#ff9800", "#f44336", "#2196f3"],
-            },
-          ],
-        },
+    function calculateTotalJobCost() {
+      let total = 0;
+      const rows = document.querySelectorAll("#line-items-table tbody tr");
+      rows.forEach(row => {
+        const quantity = parseFloat(row.querySelector(".line-item-quantity").value) || 0;
+        const cost = parseFloat(row.querySelector(".line-item-cost").value) || 0;
+        total += quantity * cost;
       });
+      document.getElementById("total-job-cost").value = total.toFixed(2);
     }
 
-    function saveEstimate(event) {
-      event.preventDefault();
-      const newEstimate = {
-        projectName: document.getElementById("project-name").value,
-        customerName: document.getElementById("customer-name").value,
-        poNumber: document.getElementById("po-number").value,
-        lineItems: document.getElementById("line-items").value,
-        amount: parseFloat(document.getElementById("total-amount").value),
-        status: "Pending",
-      };
-      estimatesData.push(newEstimate);
-      showPage("estimates");
-      renderEstimates();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      renderEstimates();
+    document.addEventListener("input", (event) => {
+      if (event.target.classList.contains("line-item-quantity") || event.target.classList.contains("line-item-cost")) {
+        calculateTotalJobCost();
+      }
     });
   </script>
 </body>
